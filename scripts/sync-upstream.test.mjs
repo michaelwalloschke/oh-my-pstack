@@ -763,6 +763,72 @@ async function reviewFixture(run) {
   }
 }
 
+for (const outcome of ["conflicts", "clean", "missing baseline", "invalid version", "export failure"]) {
+  test(`scheduled candidate handles ${outcome} without bypassing proposal review`, async () => {
+    await reviewFixture(async ({ directory, source, target, git, lock }) => {
+      const workflow = await readFile(new URL("../.github/workflows/upstream-sync.yml", import.meta.url), "utf8");
+      const update = workflow.match(/      - id: update\n[\s\S]*?        run: \|\n((?:          .*\n|\n)+)/u)?.[1];
+      assert.ok(update, "candidate update shell must be executable in the regression test");
+      const run = update.replace(/^          /gmu, "");
+      const runnerTemp = join(directory, "runner");
+      const output = join(directory, "output");
+      const summary = join(directory, "summary");
+      await mkdir(runnerTemp);
+      await writeFile(output, "");
+      await writeFile(summary, "");
+      const config = { ...JSON.parse(lock), repository: source };
+      if (outcome === "missing baseline") config.commit = "a".repeat(40);
+      await writeFile(join(target, "upstream.lock.json"), JSON.stringify(config));
+      if (outcome === "clean") await writeFile(join(target, "skills/private/a.md"), "base\n");
+      if (outcome === "invalid version") await writeFile(join(target, "package.json"), '{"version":"invalid"}');
+      if (outcome === "export failure") await mkdir(join(runnerTemp, "pstack-review"));
+      await mkdir(join(target, "scripts"));
+      await writeFile(join(target, "scripts/sync-upstream.mjs"), await readFile(new URL("./sync-upstream.mjs", import.meta.url)));
+      const targetGit = (...args) => execFileSync("git", ["-c", "core.hooksPath=/dev/null", ...args], { cwd: target, encoding: "utf8" }).trim();
+      targetGit("init", "-q", "-b", "main");
+      targetGit("add", ".");
+      targetGit("-c", "user.name=Workflow test", "-c", "user.email=workflow@example.invalid", "commit", "-qm", "base");
+      const result = spawnSync("bash", ["--noprofile", "--norc", "-e", "-o", "pipefail", "-c", run], {
+        cwd: target,
+        encoding: "utf8",
+        env: { ...process.env, PSTACK_SYNC_ROOT: target, RUNNER_TEMP: runnerTemp, GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: summary },
+      });
+      const outputs = await readFile(output, "utf8");
+      if (outcome === "conflicts") {
+        assert.equal(result.status, 0, result.stderr);
+        assert.match(outputs, /^changed=false$/mu);
+        assert.match(outputs, /^review-required=true$/mu);
+        const review = join(runnerTemp, "pstack-review");
+        const manifest = JSON.parse(await readFile(join(review, "manifest.json"), "utf8"));
+        assert.equal(manifest.commit, git("rev-parse", "HEAD"));
+        const conflict = manifest.entries.find(entry => entry.outcome.kind === "conflict");
+        assert.equal(conflict.path, "skills/private/a.md");
+        assert.equal(conflict.decision, null);
+        assert.match(await readFile(join(review, "entries", conflict.id, "proposal.txt"), "utf8"), /<<<<<<<|>>>>>>>/u);
+        const text = await readFile(summary, "utf8");
+        assert.match(text, /upstream-review/u);
+        assert.match(text, /skills\/private\/a\.md/u);
+        assert.match(text, /--apply --review/u);
+        assert.equal(await readFile(join(review, "review-summary.md"), "utf8"), text);
+        assert.match(workflow, /if: steps\.update\.outputs\.review-required == 'true'\n\s+name: Upload conflict review artifact/u);
+        assert.match(workflow, /name: upstream-review\n\s+path: \$\{\{ runner\.temp \}\}\/pstack-review/u);
+        assert.match(workflow, /propose:\n\s+needs: candidate\n\s+if: needs\.candidate\.outputs\.changed == 'true'/u);
+      } else if (outcome === "clean") {
+        assert.equal(result.status, 0, result.stderr);
+        assert.match(outputs, /^changed=true$/mu);
+        assert.doesNotMatch(outputs, /review-required=true/u);
+        assert.equal(await readFile(join(target, "skills/private/a.md"), "utf8"), "incoming\n");
+        assert.equal(JSON.parse(await readFile(join(target, "upstream.lock.json"), "utf8")).commit, git("rev-parse", "HEAD"));
+        return;
+      } else {
+        assert.notEqual(result.status, 0, `${outcome} must fail the candidate job`);
+        assert.doesNotMatch(outputs, /changed=true|review-required=true/u);
+      }
+      assert.equal(targetGit("status", "--porcelain"), "", "conflicts and errors must leave the checkout unchanged");
+    });
+  });
+}
+
 test("review export and reviewed dry-run leave all destination inputs untouched", async () => {
   await reviewFixture(async ({ exportReview, approve, cli, review, untouched }) => {
     const manifest = await exportReview();

@@ -207,7 +207,7 @@ try {
   scenarios.push({ name: "invalid-choices", noInvalidDispatch: true, settingsPreserved: true, supportedThinkingApplied: thinking });
 
   await rpc.command({ type: "new_session" });
-  const workflow = await turn("workflow", `${advice.workflowCommand} Investigate fixture.mjs without editing it. Use canonical planner and researcher roles, mapped through pstack-pi to the available native agents; designer and librarian are disabled. Start independent planning/research together with standalone briefs and ${selector}. The planner must report PLAN_NATIVE_PROOF and the researcher RESEARCH_NATIVE_PROOF plus the actual results of clamp(-2,0,5) and clamp(9,0,5). Read each full child result through its native agent resource, not a preview. Return only JSON with lower: 0, upper: 5, and consumedReports listing both proof markers.`);
+  const workflow = await turn("workflow", `${advice.workflowCommand} Investigate fixture.mjs without editing it. Use canonical planner and researcher roles, mapped through pstack-pi to the available native agents; designer and librarian are disabled. Start independent planning/research together with standalone briefs. This fixture already configures task.agentModelOverrides for task and scout to ${selector}. Keep the existing routing settings. The planner must report PLAN_NATIVE_PROOF and the researcher RESEARCH_NATIVE_PROOF plus the actual results of clamp(-2,0,5) and clamp(9,0,5). Read each full child result through its native agent resource, not a preview. Return only JSON with lower: 0, upper: 5, and consumedReports listing both proof markers.`);
   const tasks = toolCalls(workflow.frames).filter(frame => toolName(frame) === "task");
   assert.ok(tasks.length > 0, "workflow did not invoke native task");
   const participants = tasks.flatMap(frame => frame.args?.tasks ?? [frame.args]);
@@ -215,6 +215,7 @@ try {
   for (const participant of participants) {
     assert.ok(!["designer", "librarian"].includes(participant.agent), "disabled agent reached dispatch");
     assert.ok(participant.effort === undefined, "hidden effort field reached dispatch");
+    assert.equal(participant.model, undefined, "ordinary OMP tasks must use configured agent routing, not the seance-only model field");
   }
   const spawned = workflow.frames.filter(frame => frame.type === "subagent_lifecycle" && frame.payload?.status === "started").map(frame => frame.payload.id);
   assert.ok(spawned.length >= 2, "workflow spawned fewer than two children");

@@ -5,6 +5,11 @@ const root = resolve(import.meta.dirname, "..");
 const skillsRoot = join(root, "skills");
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;
 const requiredSkills = new Set([
+  "sharpen",
+  "maintain-formal-verification-skill",
+  "ketchup",
+  "in-your-own-words",
+  "create-formal-verification-skill",
   "architect",
   "arena",
   "automate-me",
@@ -199,6 +204,9 @@ try {
   if (codexManifest.name !== "pstack-pi" || codexManifest.skills !== "./skills/") {
     failures.push(".codex-plugin/plugin.json has incorrect package identity or skills path");
   }
+  if (codexManifest.description !== packageManifest.description) {
+    failures.push("package and Codex metadata must agree on the description");
+  }
   const manifestVersions = [packageManifest.version, claudeManifest.version, codexManifest.version];
   if (manifestVersions.some(version => typeof version !== "string" || !SEMVER.test(version))) {
     failures.push("package and plugin manifests require valid fork SemVer strings");
@@ -270,6 +278,20 @@ try {
 }
 
 const forbidden = [
+  "claude-opus-5-5-xhigh",
+  "grok-4.7-xhigh-fast",
+  "pstack-models.mdc",
+  "cursor-team-kit",
+  "delegate_task",
+  "orchestrator_capabilities",
+  "t3_thread_",
+  "run_in_background:",
+  "Pass a per-item `model` only when the live task schema exposes",
+  "when the live schema accepts a per-item model",
+  "git worktree remove --force",
+  "git worktree remove -f",
+  "<<<<<<<",
+  ">>>>>>>",
   "~/.cursor/",
   ".cursor/skills/",
   ".cursor/plugins/",

@@ -1,7 +1,7 @@
 {
   "name": "pstack-pi",
-  "version": "0.15.13-omp.1",
-  "description": "Portable pstack engineering workflows and Agent Skills for Pi, OMP, OpenCode, Claude Code, and Codex.",
+  "version": "0.15.29-omp.1",
+  "description": "Oh My Pi-first pstack engineering workflows and Agent Skills for OMP, Pi, OpenCode, Claude Code, and Codex.",
   "type": "module",
   "keywords": [
     "pi-package",
@@ -53,6 +53,8 @@
     "docs/upstream-compatibility-design.md",
     "docs/installation.md",
     "docs/maintenance.md",
+    "docs/fork-assessment-2026-10.md",
+    "docs/upstream-refresh-2026-10-21.md",
     "CHANGES.md"
   ],
   "scripts": {

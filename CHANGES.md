@@ -1,5 +1,18 @@
 # Changes
 
+## 0.15.29-omp.1, unreleased
+
+- Refresh Cursor pstack to `0.15.29` at `190d28736eff128ec94f502a22c7fe0c4b56cd37`. Add five skills and reconcile portable workflows. See the [refresh report](docs/upstream-refresh-2026-10-21.md).
+- Retain this fork's Claude Code marketplace distribution and installation checks while importing the OMP-focused refresh.
+- Correct OMP 18.12.5 ordinary child model routing through native agent settings. Reserve per-task `model` for historical `seance` consults.
+- Preserve scheduled sync conflicts as a downloadable review artifact. Skip privileged proposal publication for conflicts and keep unexpected errors fatal.
+- Add exact-head GitHub merge guards, independent-review availability checks, stopped-writer checks, and plain worktree removal with refusal as a stop.
+- Document the [comparison with other forks](docs/fork-assessment-2026-10.md). Keep the maintained OMP integration.
+- Preserve project-only routing setup, parent-bound model provenance, native isolation and IRC follow-up smoke checks, and session recovery guidance from this fork.
+- Make the worktree lock probe portable to macOS `awk` and hold worktrees when lock inspection fails instead of labeling them safe.
+- Keep `unlimited` reasoning budgets as preservation of current supported levels rather than rewriting explicit thinking selectors to max.
+- Point installation commands at this fork instead of reinstalling the upstream distribution.
+
 ## 0.15.13-omp.1 — unreleased
 
 ### Release provenance
@@ -41,4 +54,3 @@
 - Make skill-only documentation links self-contained or public, including an explicit example index instead of a directory target.
 
 
-[You have received this identical output 3 times. Re-reading '/home/johndoe/Work/oh-my-pstack/CHANGES.md:raw' will not change it — use a narrower selector (path:A-B), or proceed with the edit.]
