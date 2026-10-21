@@ -68,7 +68,7 @@ for (const forge of ["gh", "origin"]) {
 
 }
 
-for (const scenario of ["unlocked", "locked", "locked with reason", "locked with reason -", "lock probe failure"]) {
+for (const scenario of ["unlocked", "locked", "locked with reason", "locked with reason -", "lock probe failure", "lock probe empty output"]) {
   test(`worktree audit classifies a clean landed worktree by lock state: ${scenario}`, async () => {
     const root = await mkdtemp(join(tmpdir(), "pstack-audit-lock-"));
     const repo = join(root, "repo"), worktree = join(root, "detached"), bin = join(root, "bin");
@@ -84,9 +84,10 @@ for (const scenario of ["unlocked", "locked", "locked with reason", "locked with
         git("worktree", "lock", ...reason, worktree);
       }
       for (const cli of ["gh", "origin"]) await writeFile(join(bin, cli), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
-      if (scenario === "lock probe failure") {
+      if (scenario === "lock probe failure" || scenario === "lock probe empty output") {
         const realAwk = execFileSync("sh", ["-c", "command -v awk"], { encoding: "utf8" }).trim();
-        await writeFile(join(bin, "awk"), `#!/bin/sh\nfor arg; do case "$arg" in target=*) exit 2 ;; esac; done\nexec "${realAwk}" "$@"\n`, { mode: 0o755 });
+        const status = scenario === "lock probe failure" ? 2 : 0;
+        await writeFile(join(bin, "awk"), `#!/bin/sh\nif [ -n "\${AUDIT_TARGET+x}" ]; then exit ${status}; fi\nexec "${realAwk}" "$@"\n`, { mode: 0o755 });
       }
       const result = spawnSync("bash", [script, "-b", "main", repo], {
         encoding: "utf8", env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
@@ -103,6 +104,7 @@ for (const scenario of ["unlocked", "locked", "locked with reason", "locked with
         "locked with reason": { lock: "yes", inspect: "ok", bucket: "hold-locked" },
         "locked with reason -": { lock: "yes", inspect: "ok", bucket: "hold-locked" },
         "lock probe failure": { lock: "?", inspect: "lock-error", bucket: "hold-error" },
+        "lock probe empty output": { lock: "?", inspect: "lock-error", bucket: "hold-error" },
       }[scenario];
       assert.deepEqual({ lock, inspect, bucket }, expected);
     } finally {

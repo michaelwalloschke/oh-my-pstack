@@ -240,10 +240,13 @@ This fork imports the source refresh, conflict-review artifacts, and portable sa
 These checks ran against the reconciled `sync/upstream-0.15.29` tree, rather than the historical upstream tree described above:
 
 - `npm run verify` passed for 61 skills and 131 Markdown files.
-- The credential-free Node suite in [Maintenance](maintenance.md#deterministic-checks) passed all 206 tests, including parent-bound provenance and the five lock-state scenarios.
+- The credential-free Node suite in [Maintenance](maintenance.md#deterministic-checks) passed all 207 tests, including parent-bound provenance and the six lock-state scenarios.
 - All 77 bundled Bun tests passed. The configured strict watcher typecheck and a separate strict check of the orchestration source and tests passed.
 - `PSTACK_INSTALL_HOSTS=omp,claude npm run test:install` passed on OMP 18.12.5 and Claude Code 2.1.306 with live configuration unchanged.
 - The authenticated eight-scenario OMP smoke passed with a `gpt-6-luna` parent routing a child to `gpt-6.1-sol:low`. It proved project routing for all five role-target agents, preserved an unrelated agent override, captured an isolated patch without parent changes, and observed a completed assistant reply after an IRC follow-up.
 - The actual macOS worktree audit held a clean, locked worktree whose lock reason was `-`, with no `awk` errors. Before the fix, the upstream script labeled a locked worktree safe after its lock probe failed.
+- The public source override and marketplace identifiers now select this fork. The installation receipts above use the isolated candidate; they do not claim public `main` already includes this PR.
+
+The authenticated smoke receipt is from `31c0ea6`, before the review follow-up. The public-source and lock-probe fixes were followed by fresh Node and isolated-install runs. The follow-up's model-guidance change restores the existing cap for `large`, `medium`, and `small`. It leaves `unlimited` and the smoke's explicit low selector unchanged.
 
 This verification does not claim a passing OpenCode installation. Its older discovery command remains incompatible with OpenCode v2.1.2, as noted in [Installation](installation.md#opencode).

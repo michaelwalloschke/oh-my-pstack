@@ -219,7 +219,7 @@ try {
   );
   if (
     claudeMarketplace.name !== "oh-my-pstack" ||
-    claudeMarketplace.owner?.name !== "JonathanPitre" ||
+    claudeMarketplace.owner?.name !== "michaelwalloschke" ||
     claudeMarketplace.plugins?.length !== 1 ||
     claudeMarketplace.plugins[0]?.name !== "pstack-pi" ||
     claudeMarketplace.plugins[0]?.source !== "./"

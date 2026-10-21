@@ -100,20 +100,19 @@ printf "SIZE\tAGE\tMERGED\tDIRTY\tLOCKED\tINSPECT\tREMOTE\tPR\tBUCKET\tWORKTREE\
 printf '%s\n' "$worktree_records" | awk '/^worktree /{sub(/^worktree /, ""); print}' | while IFS= read -r wt; do
 	[ "$wt" = "$main_wt" ] && continue
 	inspect=ok
-	if ! lock=$(printf '%s\n' "$worktree_records" | awk -v target="$wt" '
+	if ! lock=$(printf '%s\n' "$worktree_records" | AUDIT_TARGET="$wt" awk '
 		BEGIN { RS=""; FS="\n" }
-		$1 == "worktree " target {
+		$1 == "worktree " ENVIRON["AUDIT_TARGET"] {
+			state = "-"
 			for (i = 1; i <= NF; i++) {
-				if ($i ~ /^locked/) {
-					print "yes"
-					exit
-				}
+				if ($i ~ /^locked/) state = "yes"
 			}
-		}'); then
+			print state
+			exit
+		}') || [ -z "$lock" ]; then
 		lock="?"
 		inspect="lock-error"
 	fi
-	[ -z "$lock" ] && lock="-"
 
 	size=$(du -sh "$wt" 2>/dev/null | awk '{print $1}')
 	if ! head=$(git -C "$wt" rev-parse HEAD 2>/dev/null); then

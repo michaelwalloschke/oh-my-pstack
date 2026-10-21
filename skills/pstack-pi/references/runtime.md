@@ -134,7 +134,9 @@ Setup may record a `# budget: <label> (<target>)` comment and optional
 `<workflow role> reasoning: <effort>` entries alongside model choices. The budget
 comment records the user's preference. The per-role entries specify what to pass
 to the host. `unlimited` keeps current efforts. `large`, `medium`, and `small`
-target xhigh, high, and medium, respectively. A budget is not a spending limit.
+target xhigh, high, and medium, respectively. For these budgets, select the highest
+supported effort at or below the target without changing model families. A budget
+is not a spending limit.
 
 Read the reasoning entry for the selected workflow role when delegating. For a
 panel, pair efforts with model entries in order and require equal list lengths.

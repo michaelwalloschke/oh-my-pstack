@@ -27,7 +27,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JonathanPitre/oh-my-pstack.git"
+    "url": "git+https://github.com/michaelwalloschke/oh-my-pstack.git"
   },
   "publishConfig": {
     "access": "public",

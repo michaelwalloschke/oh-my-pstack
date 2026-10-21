@@ -9,9 +9,9 @@
 - Add exact-head GitHub merge guards, independent-review availability checks, stopped-writer checks, and plain worktree removal with refusal as a stop.
 - Document the [comparison with other forks](docs/fork-assessment-2026-10.md). Keep the maintained OMP integration.
 - Preserve project-only routing setup, parent-bound model provenance, native isolation and IRC follow-up smoke checks, and session recovery guidance from this fork.
-- Make the worktree lock probe portable to macOS `awk` and hold worktrees when lock inspection fails instead of labeling them safe.
+- Make the worktree lock probe portable to macOS `awk` and hold worktrees when lock inspection fails or returns no status instead of labeling them safe.
 - Keep `unlimited` reasoning budgets as preservation of current supported levels rather than rewriting explicit thinking selectors to max.
-- Point installation commands at this fork instead of reinstalling the upstream distribution.
+- Align installation commands, public-source overrides, marketplace identifiers, and package metadata with this fork instead of the upstream distribution.
 
 ## 0.15.13-omp.1 — unreleased
 
