@@ -27,7 +27,7 @@ const thinking = requestedThinking ?? (supportedThinking.includes("low") ? "low"
 const selector = `${baseSelector}:${thinking}`;
 const parentRequest = process.env.PSTACK_OMP_PARENT_MODEL;
 if (parentRequest !== undefined && !parentRequest.startsWith(`${provider}/`)) throw new Error(`PSTACK_OMP_PARENT_MODEL must be a ${provider}/<model> selector`);
-const alternate = inventory.models?.find(entry => entry.provider === provider && entry.kind === "chat" && entry.id !== modelId && (parentRequest === undefined ? [...(entry.thinking ?? []), "off"].includes(thinking) : `${provider}/${entry.id}` === parentRequest));
+const alternate = inventory.models?.find(entry => entry.provider === provider && entry.kind === "chat" && entry.id !== modelId && [...(entry.thinking ?? []), "off"].includes(thinking) && (parentRequest === undefined || `${provider}/${entry.id}` === parentRequest));
 if (!alternate) throw new Error(parentRequest === undefined ? `Routing proof needs a second ${provider} chat model that supports thinking "${thinking}"; set PSTACK_OMP_PARENT_MODEL to choose one` : `PSTACK_OMP_PARENT_MODEL is unavailable or equals the routed model: ${parentRequest}`);
 const foreignSelector = `${provider}/${alternate.id}:${thinking}`;
 let credential = process.env.PSTACK_OMP_API_KEY;
