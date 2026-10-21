@@ -5,7 +5,7 @@ Git installation from this repository is the supported consumer path. Named skil
 ## Oh My Pi
 
 ```bash
-omp install https://github.com/JonathanPitre/oh-my-pstack
+omp install https://github.com/michaelwalloschke/oh-my-pstack
 ```
 
 Confirm the enabled plugin with `omp plugin list --json`, then load skills with `omp read skill://setup-pstack` and `omp read skill://poteto-mode`.
@@ -44,10 +44,10 @@ An npm install of `pstack-pi@omp` requires a published version. Adding the relea
 ## Pi
 
 ```bash
-pi install https://github.com/JonathanPitre/oh-my-pstack
+pi install https://github.com/michaelwalloschke/oh-my-pstack
 ```
 
-Start Pi and confirm the package with `pi list`. Review the source before installing; Pi packages run with full system access. Update with `pi update --extensions`, or remove with `pi remove https://github.com/JonathanPitre/oh-my-pstack`.
+Start Pi and confirm the package with `pi list`. Review the source before installing; Pi packages run with full system access. Update with `pi update --extensions`, or remove with `pi remove https://github.com/michaelwalloschke/oh-my-pstack`.
 
 Native Pi does not include subagents. For parallel workers and per-role model assignments, install Pi's separate delegation extension:
 
@@ -59,16 +59,18 @@ Restart Pi and run `/subagents-doctor`. The extension provides the `subagent` to
 
 ## OpenCode
 
+OpenCode v2.1.2 does not expose `opencode debug skill`, which the installation harness currently uses. Its discovery cases fail on that version. The copy steps below install the files but do not prove runtime discovery.
+
 OpenCode loads Agent Skills from `.opencode/skills/` in a project or `~/.config/opencode/skills/` globally. For global installation:
 
 ```bash
-git clone https://github.com/JonathanPitre/oh-my-pstack.git \
+git clone https://github.com/michaelwalloschke/oh-my-pstack.git \
   ~/.local/share/oh-my-pstack
 mkdir -p ~/.config/opencode/skills
 cp -R ~/.local/share/oh-my-pstack/skills/. ~/.config/opencode/skills/
 ```
 
-Confirm with `opencode debug skill`. To update, pull and repeat the copy:
+To update, pull and repeat the copy:
 
 ```bash
 git -C ~/.local/share/oh-my-pstack pull --ff-only
@@ -78,17 +80,17 @@ cp -R ~/.local/share/oh-my-pstack/skills/. ~/.config/opencode/skills/
 For project-local installation:
 
 ```bash
-git clone https://github.com/JonathanPitre/oh-my-pstack.git .pstack-source
+git clone https://github.com/michaelwalloschke/oh-my-pstack.git .pstack-source
 mkdir -p .opencode/skills
 cp -R .pstack-source/skills/. .opencode/skills/
 ```
 
-Run `opencode debug skill` from that project. OpenCode already provides primary and subagents. Configure their models through `opencode.json` or `opencode.jsonc`. Do not install `pi-subagents` or write Pi settings on OpenCode.
+OpenCode already provides primary and subagents. Configure their models through `opencode.json` or `opencode.jsonc`. Do not install `pi-subagents` or write Pi settings on OpenCode.
 
 ## Claude Code
 
 ```bash
-claude plugin marketplace add JonathanPitre/oh-my-pstack
+claude plugin marketplace add michaelwalloschke/oh-my-pstack
 claude plugin install pstack-pi@oh-my-pstack
 claude plugin list --json
 claude plugin details pstack-pi
@@ -97,7 +99,7 @@ claude plugin details pstack-pi
 ## Codex
 
 ```bash
-codex plugin marketplace add JonathanPitre/oh-my-pstack
+codex plugin marketplace add michaelwalloschke/oh-my-pstack
 codex plugin add pstack-pi@oh-my-pstack
 codex plugin list --json
 ```
@@ -109,7 +111,7 @@ After installation, Codex loads the plugin's skills through its app server and `
 Review the repository before granting consent: skills are trusted instructions that can influence the agent.
 
 ```bash
-gemini skills install https://github.com/JonathanPitre/oh-my-pstack \
+gemini skills install https://github.com/michaelwalloschke/oh-my-pstack \
   --scope user --path skills --consent
 gemini skills list --all
 ```
@@ -125,7 +127,7 @@ The coverage column lists cases in the install test suite. It does not report a 
 | OMP | `omp install` or a local plugin link | Routes child models by agent name in `.omp/config.yml` and maps roles to the live agents. | Yes |
 | Pi | `pi install` | Native Pi has no subagents. Optional `pi-subagents` adds child delegation and per-role model assignments. | Yes |
 | OpenCode | Copy skills into the project or user skill directory. | Uses native agents and model settings in `opencode.json` or `opencode.jsonc`. | Global and project |
-| Claude Code | Install from the Claude marketplace. | Maps roles to capabilities exposed by the active session. | Yes |
+| Claude Code | Install from this fork's Claude marketplace. | Maps roles to capabilities exposed by the active session. | Yes |
 | Codex | Install from the Codex marketplace. | Maps roles to capabilities exposed by the active session. | Yes |
 | Gemini CLI | Install the skills with `gemini skills install`. | Maps roles to capabilities exposed by the active session. | Yes |
 

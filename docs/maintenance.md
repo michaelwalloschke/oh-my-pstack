@@ -4,9 +4,9 @@ This document is for people who update, verify, or release the fork. Consumer in
 
 ## Versions
 
-`package.json`, `.claude-plugin/plugin.json`, and `.codex-plugin/plugin.json` must agree on the fork version. The current release is `0.15.13-omp.1`.
+`package.json`, `.claude-plugin/plugin.json`, and `.codex-plugin/plugin.json` must agree on the fork version. The current unreleased version is `0.15.29-omp.1`.
 
-`upstream.lock.json` records the Cursor source separately: version `0.15.13` at commit `77526ffa67f8dafc698d14b5356e6d4fc78c3127`. Sync updates that pin. It does not rewrite fork manifests.
+[upstream.lock.json](../upstream.lock.json) records the Cursor source version and exact commit separately. Sync updates that pin. It does not rewrite fork manifests. Read the lock when comparing source baselines instead of copying its commit into consumer documentation.
 
 SemVer treats the `omp` suffix as a prerelease. After publication, npm examples should use `pstack-pi@omp`, not an implied stable `latest` release. Git installation remains the primary path until a version is actually on the registry.
 
@@ -18,8 +18,8 @@ From the repository root:
 
 ```bash
 npm run verify
-node --test scripts/verify.test.mjs scripts/sync-upstream.test.mjs scripts/sync-proposal.test.mjs scripts/omp-rpc.test.mjs scripts/omp-provenance.test.mjs scripts/package.test.mjs
-bun --cwd skills/poteto-mode/scripts test orch watch-pr
+node --test scripts/verify.test.mjs scripts/sync-upstream.test.mjs scripts/sync-proposal.test.mjs scripts/omp-rpc.test.mjs scripts/omp-provenance.test.mjs scripts/package.test.mjs scripts/worktree-audit.test.mjs
+bun test skills/poteto-mode/scripts/orch skills/poteto-mode/scripts/watch-pr skills/poteto-mode/scripts/check-plan.test.ts
 bun run --cwd skills/poteto-mode/scripts typecheck
 ```
 
@@ -34,7 +34,7 @@ The installation gate requires OMP, Pi, OpenCode, Claude Code, Codex, Gemini CLI
 ```bash
 npm run test:install
 PSTACK_INSTALL_HOSTS=omp npm run test:install
-PSTACK_INSTALL_SOURCE=https://github.com/JonathanPitre/oh-my-pstack npm run test:install
+PSTACK_INSTALL_SOURCE=https://github.com/michaelwalloschke/oh-my-pstack npm run test:install
 ```
 
 The default run installs an isolated copy of this checkout. `PSTACK_INSTALL_HOSTS` selects named hosts; unknown names fail. A local directory can also be supplied as `PSTACK_INSTALL_SOURCE`. Each host receives a disposable HOME/project and temporary XDG roots. Missing hosts and discovery failures fail rather than skip.
@@ -62,6 +62,8 @@ Beyond the skill and setup phases, the smoke covers:
 
 `.github/workflows/upstream-sync.yml` checks the original pstack `main` branch every six hours at minute 17 and can also be started manually. The candidate job has read-only permissions and disabled checkout credentials. If owned `skills/` or `upstream.lock.json` files change, it verifies the tree and uploads only `proposal.patch` and `metadata.json`. A second job applies that artifact with `scripts/sync-proposal.mjs` in a trusted checkout and opens an inspectable pull request. It does not merge automatically.
 
+When reconciliation needs explicit decisions, the candidate instead uploads an `upstream-review` artifact for 14 days and lists conflicts and resolution commands in the job summary. It leaves the source pin unchanged and skips the proposal job. Missing source objects, invalid manifests, and failed review exports still fail the workflow.
+
 A failed application must not advance the pin. There is no rollback journal; recover by discarding the dirty tree and keeping the last successful lock.
 
 `--source` is a trusted local development override. It is not a signature, ancestry, or multi-upstream framework.
@@ -85,13 +87,13 @@ Skill links into upstream `pstack/docs/` are rewritten to public GitHub URLs pin
 
 ## Publish an npm release
 
-The `.github/workflows/publish-npm.yml` workflow runs only when a GitHub Release is published. It checks out the release tag and requires `v<version>` to match `package.json` exactly. It verifies the package, runs the real pack gate, then runs `npm publish --access public --provenance --tag omp`. A failed publish fails the workflow. The workflow does not bump versions, push commits or tags, or publish to GitHub Packages. The first release tag for this cutover is `v0.15.13-omp.1`.
+The `.github/workflows/publish-npm.yml` workflow runs only when a GitHub Release is published. It checks out the release tag and requires `v<version>` to match `package.json` exactly. It verifies the package, runs the real pack gate, then runs `npm publish --access public --provenance --tag omp`. A failed publish fails the workflow. The workflow does not bump versions, push commits or tags, or publish to GitHub Packages. The release tag for this version is `v0.15.29-omp.1`.
 
 Before using the workflow, configure a
 [trusted publisher on npm](https://docs.npmjs.com/trusted-publishers/) for
 `pstack-pi` with these GitHub Actions settings:
 
-- Organization or user is `JonathanPitre`.
+- Organization or user is `michaelwalloschke`.
 - Repository is `oh-my-pstack`.
 - Workflow filename is `publish-npm.yml`.
 - Leave the environment name empty.
@@ -102,10 +104,12 @@ If npm requires an existing package before you can configure its trusted
 publisher, a package owner must publish the initial version manually first.
 The workflow uses GitHub OIDC and does not require an `NPM_TOKEN` secret.
 
+Publishing from this fork requires authorization from the npm package owner. A Git fork alone does not grant that access.
+
 After the version change has been reviewed and merged, create its matching
 `v<version>` tag and publish a GitHub Release for that tag. Use a new package
 version for each release because npm versions cannot be republished.
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pull requests and pushes with read-only permissions. It runs verify, verifier/updater/proposal/RPC/provenance unit tests, the real package test, bundled Bun tests, and strict typecheck. Model-backed smoke and the multi-host install suite stay separate.
+`.github/workflows/ci.yml` runs on pull requests and pushes with read-only permissions. It runs verify, verifier/updater/proposal/RPC/provenance/worktree-audit unit tests, the real package test, bundled Bun tests, and strict typecheck. Model-backed smoke and the multi-host install suite stay separate.

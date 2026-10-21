@@ -40,14 +40,15 @@ limitation instead of substituting a Pi-specific mechanism.
 
 ### OMP delegation prerequisite
 
-OMP has native `task` agents and routes each child's model by agent name through `task.agentModelOverrides`. A task item never carries a worker model, and the `model` field the live schema may list belongs to `seance` consults. Do not install `pi-subagents`, write `.pi/settings.json`, or edit the user's `config.yml` under `~/.omp/agent/`. Setup writes only the project's `.omp/config.yml` and `.pstack/config.md`. OMP's settings commands do not write arbitrary project keys, so edit the project file directly.
+OMP has native `task` agents and routes each child's model by agent name through `task.agentModelOverrides`. A task item never carries a worker model. The `model` field the live schema may list belongs to `seance` consults, which need a `sourceSession`, so never use `seance` for workers or pass `model` to an ordinary agent ([OMP 18.12.5 agent discovery](https://github.com/can1357/oh-my-pi/blob/v18.12.5/docs/task-agent-discovery.md)). Do not install `pi-subagents`, write `.pi/settings.json`, or edit the user's `config.yml` under `~/.omp/agent/`. Setup writes only the project's `.omp/config.yml` and `.pstack/config.md`, and never creates agent definitions. OMP's settings commands do not write arbitrary project keys, so edit the project file directly. When `task.enableEffort` is false, omit `effort` and carry a supported thinking level on the agent's routed selector, as [Reasoning controls](../pstack-pi/references/omp.md#reasoning-controls) says.
 
 ### 1. Detect available choices
 
 Detect these capabilities independently:
 
 1. The model IDs the current host actually exposes.
-2. Whether the host has a routing mechanism that can send a child to a chosen model.
+2. Whether the host has a task or subagent facility and a routing mechanism that can
+   send a child to a chosen model, and how the selected ordinary agent receives that choice.
 3. Whether that mechanism accepts a separate reasoning effort or exposes model variants
    with documented effort levels. Record only the supported values and mappings.
 4. The live agent names, and the mapping from canonical pstack roles to them.
@@ -77,7 +78,7 @@ If the host has a task facility but cannot enumerate models, use only a host rol
 mapping that the facility documents. Do not ask the user to invent a raw slug.
 `inherit-parent` is valid only when the host can pass the current model to a child.
 
-A host whose live schema documents a per-item `model` for ordinary children can assign a model per child that way. OMP's `model` field is not that field.
+Treat a per-item `model` field as usable only when the selected ordinary agent supports it; a field in a shared schema is not evidence. A host whose live schema documents it for ordinary children can assign a model per child that way. OMP's `model` field is not that field, so on OMP use `task.agentModelOverrides` (see [Model routing](../pstack-pi/references/omp.md#model-routing)). Do not dispatch a hidden `effort` field when `task.enableEffort` is false. Treat a choice as configured only after the read-back in step 5, and as having run only when the child's journal shows it ([Child model provenance](../pstack-pi/references/omp.md#child-model-provenance)).
 
 ### 2. Load current state
 
@@ -120,9 +121,9 @@ the host exposes no reasoning control, report that limitation and preserve its
 model choices. Do not record an applied budget or reasoning override in that case.
 A budget is a reasoning preference, not a monetary limit.
 
-On OMP, group the workflow roles by the agent each runs through, using the adapter's role map, and show one row per live agent. Each row names the roles and config lines the agent serves, its current override, the proposed model, and the level. Roles that share an agent share one model and one level. Say so, and say that a panel whose seats run through one agent has N participants on one model. When a group's existing lines disagree, show the conflict and ask for one choice for that agent. Never configure `seance`. It consults past sessions and is not a pstack role target.
+On OMP, group the workflow roles by the agent each runs through, using the adapter's role map or a distinct live agent the user assigns to a seat, and show one row per live agent. Each row names the roles and config lines the agent serves, its current override, the proposed model, and the level. Roles that share an agent share one model and one level. Say so, and say that a panel whose seats run through one agent has N participants on one model. Independent seat models need distinct agents that the live roster already lists, such as discovered project agents in `.omp/agents/`. Setup never creates agent definitions. When no distinct live agent exists, report the shared-agent limitation and keep one choice for that agent. When a group's existing lines disagree, show the conflict and ask for one choice for that agent. Never configure `seance`. It consults past sessions and is not a pstack role target.
 
-If both model inventory and per-child model selection are available, show every
+If both model inventory and native child model routing are available, show every
 workflow role with its current concrete `provider/model-id` choice and supported
 reasoning level. Distinguish applied efforts from host defaults. Mark an
 explicit model absent from the live inventory as needing a replacement. Also list
@@ -154,8 +155,7 @@ a selected explicit model is unavailable, or a reasoning value is unsupported,
 stop, report both rejected choices, and ask for a replacement. Never
 write a configuration that requires another host. Never write a guessed vendor
 slug, silently substitute a model, or dispatch a child to work around an invalid
-choice. On OMP, write only the project's `.omp/config.yml` and the selected pstack configuration; do not create `.pi/settings.json` or modify global
-settings.
+choice. On OMP, write only the project's `.omp/config.yml` and the selected pstack configuration; do not create `.pi/settings.json` or agent definitions, and write no global settings. The pstack configuration records preferences. Call a choice active only when step 5's read-back shows its `task.agentModelOverrides` entry. If the entry cannot be written, report the preference as inactive and the child as running on the agent's own definition or the OMP fallback.
 
 On OMP, also check each of these:
 
@@ -181,9 +181,8 @@ must match the model list in length and order, using `host-default` for entries
 without an explicit effort. Keep those entries out of model ID values. Use concrete
 detected model IDs in this shape. Replace every placeholder with a model the
 current host reported, and use `inherit-parent` only when the host supports it.
-Panel examples below have three seats, matching current upstream defaults; keep a
-user's longer or shorter confirmed list. A confirmed one-entry panel is one
-participant, not an implicit three-seat default:
+Panel examples below have two seats. Keep the user's longer or shorter confirmed list. A confirmed one-entry panel is one
+participant, not an implicit two-seat default:
 
 ```md
 # pstack role and model configuration
@@ -202,11 +201,11 @@ reflect tooling: <researcher-model>
 reflect judgment: <reviewer-model>
 reflect divergent: <divergent-model>
 reflect synthesizer: <synthesizer-model>
-arena runners: <planner-model>, <reviewer-model>, inherit-parent
-arena cross-judge pool: <reviewer-model>, <planner-model>, inherit-parent
+arena runners: <planner-model>, <reviewer-model>
+arena cross-judge pool: <reviewer-model>, <planner-model>
 swarm workers: <implementer-model>
-architect runners: <planner-model>, <reviewer-model>, inherit-parent
-interrogate reviewers: <reviewer-model>, <planner-model>, inherit-parent
+architect runners: <planner-model>, <reviewer-model>
+interrogate reviewers: <reviewer-model>, <planner-model>
 ```
 
 For OMP, confirm the project save with the host's structured ask tool, then write routing to the project's `.omp/config.yml` once the confirmed choices pass validation:
@@ -256,6 +255,7 @@ Write the selected IDs under `subagents.agentOverrides.<agent>.model`:
     }
   }
 }
+
 ```
 
 Write host-specific reasoning settings only when the detected host facility
@@ -265,6 +265,7 @@ alone does not establish reasoning support.
 For OpenCode, do not write `.pi/settings.json`. Keep the concrete model choices in
 the user's existing `opencode.json` or `opencode.jsonc`, and use the live
 OpenCode agent names in the pstack role map. Preserve unrelated configuration.
+
 
 ### 6. Confirm
 
@@ -286,3 +287,7 @@ model only when the current host documents a model-switching command.
 ### 7. Offer a verification skill (optional)
 
 Check whether the project has a way to drive the real app for proof, such as a `verify-*` skill or an existing harness. If not, offer once to invoke the sibling **create-verification-skill** skill. On no, move on without pushing.
+
+### 8. Offer a formal verification skill (optional)
+
+If the project has no skill that runs a model checker or proof, offer once to invoke the sibling **create-formal-verification-skill** skill. On no, move on without pushing.

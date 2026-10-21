@@ -16,7 +16,7 @@ async function withVerifyFixture(run) {
         filter: source => !source.split("/").includes("node_modules"),
       });
     }
-    for (const path of ["docs/installation.md", "docs/maintenance.md", "CHANGES.md"]) {
+    for (const path of ["docs/installation.md", "docs/maintenance.md", "docs/fork-assessment-2026-10.md", "docs/upstream-refresh-2026-10-21.md", "CHANGES.md"]) {
       try { await access(join(repository, path)); }
       catch (error) { if (error.code === "ENOENT") continue; throw error; }
       await cp(join(repository, path), join(fixture, path));

@@ -6,12 +6,10 @@ disable-model-invocation: true
 
 # Exhaust the Design Space
 
-When a novel interaction or architectural decision has no established precedent, explore several concrete alternatives before implementation. Building the wrong thing costs more than exploring three options.
-
-**The rule.** When the right answer is not obvious, build 2-3 competing prototypes or sketches. Compare them side by side. Only then commit. Design it twice is this rule by another name. A second flavor of the first shape does not count.
+When a novel interaction or architectural decision has no precedent in the codebase and the right answer is not obvious, build 2-3 competing prototypes or sketches, compare them side by side, and only then commit. Design it twice is this rule by another name. A second flavor of the first shape does not count.
 
 **When it applies:**
-- Novel UI interactions (no prior art in the codebase)
+- Novel UI interactions with no prior art in the codebase
 - Architectural choices with multiple viable approaches
 - Product design decisions where user experience depends on feel, not logic
 

@@ -10,7 +10,8 @@ import { startOmpRpc } from "./omp-rpc.mjs";
 
 const execFileAsync = promisify(execFile);
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const publicSource = "https://github.com/JonathanPitre/oh-my-pstack";
+const publicSlug = "michaelwalloschke/oh-my-pstack";
+const publicSource = `https://github.com/${publicSlug}`;
 const requestedSource = process.env.PSTACK_INSTALL_SOURCE ?? "candidate";
 const requiredSkills = ["setup-pstack", "poteto-mode"];
 const hostBins = Object.fromEntries([
@@ -261,7 +262,7 @@ async function opencodeInstall(ctx, global) {
 async function claudeInstall(ctx) {
   const installed = async () => JSON.parse(await command(hostBins.claude, ["plugin", "list", "--json"], ctx));
   if (!ctx.installed) assert.ok(!(await installed()).some((entry) => entry.id === "pstack-pi@oh-my-pstack"), "Claude baseline already contains pstack");
-  await command(hostBins.claude, ["plugin", "marketplace", "add", ctx.public ? "JonathanPitre/oh-my-pstack" : ctx.source], ctx);
+  await command(hostBins.claude, ["plugin", "marketplace", "add", ctx.public ? publicSlug : ctx.source], ctx);
   await command(hostBins.claude, ["plugin", "install", "pstack-pi@oh-my-pstack"], ctx);
   const plugin = (await installed()).find((entry) => entry.id === "pstack-pi@oh-my-pstack");
   assert.equal(plugin?.enabled, true, "Claude installed plugin is not enabled");
@@ -289,7 +290,7 @@ async function codexCatalog(ctx) {
 
 async function codexInstall(ctx) {
   if (!ctx.installed) absent((await codexCatalog(ctx)).map((entry) => entry.name.split(":").at(-1)), "Codex");
-  await command(hostBins.codex, ["plugin", "marketplace", "add", ctx.public ? "JonathanPitre/oh-my-pstack" : ctx.source], ctx);
+  await command(hostBins.codex, ["plugin", "marketplace", "add", ctx.public ? publicSlug : ctx.source], ctx);
   await command(hostBins.codex, ["plugin", "add", "pstack-pi@oh-my-pstack"], ctx);
   const list = JSON.parse(await command(hostBins.codex, ["plugin", "list", "--json"], ctx));
   const plugin = list.installed.find((entry) => entry.pluginId === "pstack-pi@oh-my-pstack");

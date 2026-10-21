@@ -92,21 +92,31 @@ built-in agents map to pstack roles as follows: `scout` for `explorer` and
 `mechanical`, `reviewer` for `reviewer`, `oracle` for planning and synthesis, and
 `delegate` for an `owner`.
 
-Use concrete `provider/model-id` values only when the live inventory lists them. Use
-role aliases only when the host documents a role-to-model mapping. `inherit-parent`
-means the current conversation's model only when the host can pass it to a child. A
-missing role entry means the host default. A panel is a list of role or model choices,
-and its size controls fan-out. Honor the host's explicit rejection and fallback policy.
-Report an unavailable requested choice instead of silently substituting a guessed model.
-A role's configured choice and the host's effective routing can disagree, for example
-after a hand edit or when a routing file is missing. Compare them before dispatch and
-report a mismatch. Do not ignore the configured line silently, and do not edit user or
-global settings to make them agree.
+Use concrete `provider/model-id` values only when the host exposes per-child model
+selection and the value was confirmed in the live inventory. A per-item `model`
+field is usable only when the selected ordinary agent supports it; field presence
+in a shared task schema is insufficient. Otherwise use supported agent settings or
+frontmatter. Use role aliases only when the host documents a role-to-model mapping.
+`inherit-parent` means the current conversation's model only when the host can pass
+it to a child. A missing role entry means the host default. A panel is a list of role
+or model choices, and its size controls fan-out, but each seat needs an agent whose
+resolved model can be checked. Honor the host's explicit rejection and fallback
+policy. Report an unavailable requested choice instead of silently substituting a
+guessed model. A role's configured choice and the host's effective routing can
+disagree, for example after a hand edit or when a routing file is missing. Compare
+them before dispatch and report a mismatch. Do not ignore the configured line
+silently, and do not edit user or global settings to make them agree.
 
 OMP and `pi-subagents` route by agent name, so every role that runs through one agent
 runs on one model. A panel whose seats run through one agent has N participants on one
-model. Report it that way, give seats distinct agents when the user wants independent
-models, and claim independence only from the host's resolved-model evidence.
+model. Report it that way. When the user wants independent models, give the seats
+distinct agents that the live roster already lists, or report that the shared agent
+cannot express both choices. Claim independence only from the host's resolved-model
+evidence. On OMP, the `model` field that a live task schema may list belongs to
+`seance` consults, which require `sourceSession`, and never routes a worker
+([OMP 18.12.5 agent discovery](https://github.com/can1357/oh-my-pi/blob/v18.12.5/docs/task-agent-discovery.md)).
+The resolved-model evidence is the
+child's journal, as [Child model provenance](omp.md#child-model-provenance) describes.
 
 When the host has models but no child delegation, do not write a role mapping that
 looks active. Report the capability gap and tell the user to switch Pi's single
@@ -124,7 +134,9 @@ Setup may record a `# budget: <label> (<target>)` comment and optional
 `<workflow role> reasoning: <effort>` entries alongside model choices. The budget
 comment records the user's preference. The per-role entries specify what to pass
 to the host. `unlimited` keeps current efforts. `large`, `medium`, and `small`
-target xhigh, high, and medium, respectively. A budget is not a spending limit.
+target xhigh, high, and medium, respectively. For these budgets, select the highest
+supported effort at or below the target without changing model families. A budget
+is not a spending limit.
 
 Read the reasoning entry for the selected workflow role when delegating. For a
 panel, pair efforts with model entries in order and require equal list lengths.
@@ -140,7 +152,9 @@ is unsupported or a panel's lengths differ, report the invalid configuration
 before spawning. Do not silently claim the requested budget was applied. Roles that
 share an agent share its reasoning level, so when they ask for different efforts, ask
 the user for one value instead of averaging or choosing silently. On OMP, the controls
-are in [Reasoning controls](omp.md#reasoning-controls).
+are in [Reasoning controls](omp.md#reasoning-controls). With `task.enableEffort: false`,
+omit `effort` entirely and keep a supported thinking level on the agent's routed
+selector.
 
 Hosts without reasoning controls retain their model choices. Setup must report
 that limitation and omit applied budget and reasoning entries. A model inventory
