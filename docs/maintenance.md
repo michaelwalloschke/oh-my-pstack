@@ -18,7 +18,7 @@ From the repository root:
 
 ```bash
 npm run verify
-node --test scripts/verify.test.mjs scripts/sync-upstream.test.mjs scripts/sync-proposal.test.mjs scripts/omp-rpc.test.mjs scripts/package.test.mjs
+node --test scripts/verify.test.mjs scripts/sync-upstream.test.mjs scripts/sync-proposal.test.mjs scripts/omp-rpc.test.mjs scripts/omp-provenance.test.mjs scripts/package.test.mjs
 bun --cwd skills/poteto-mode/scripts test orch watch-pr
 bun run --cwd skills/poteto-mode/scripts typecheck
 ```
@@ -46,10 +46,17 @@ Use `PSTACK_OMP_BIN`, `PSTACK_PI_BIN`, `PSTACK_OPENCODE_BIN`, `PSTACK_CLAUDE_BIN
 Model-backed smoke is separate from credential-free CI:
 
 ```bash
-PSTACK_OMP_MODEL=openai-codex/gpt-6.1-sol npm run smoke:omp
+PSTACK_OMP_MODEL=openai-codex/gpt-6.1-sol:low npm run smoke:omp
 ```
 
-Set `PSTACK_OMP_MODEL` to an exact available `provider/model` selector. A documented thinking suffix is kept only when that model supports it. Do not substitute another model. The script uses disposable HOME state and does not print credentials.
+Set `PSTACK_OMP_MODEL` to an exact available `provider/model` selector. A documented thinking suffix is kept only when that model supports it. Do not substitute another model. The provider must also expose a second chat model that supports the same thinking level: the routing phase runs the parent on it so a child on the exact selector proves the override, not inheritance. Set `PSTACK_OMP_PARENT_MODEL=<provider>/<model>` to choose that parent model explicitly; otherwise the first compatible one is used. The script uses disposable HOME state, resolves the credential through `omp token` (or `PSTACK_OMP_API_KEY`), and does not print credentials. A missing model, unsupported thinking level, missing second model, or missing capability fails rather than skips.
+
+Beyond the skill and setup phases, the smoke covers:
+
+- **Routing.** `/skill:setup-pstack` must route every live role-target agent in the project `.omp/config.yml` while preserving unrelated `retry`/`task` keys and a plugin agent's distinct override. Read-back uses an empty HOME to prove the project layer owns the routing; the disposable global config and overlay must remain unchanged. After restarting OMP, a `task` child's journal must record the exact provider/model on every assistant attempt, at least one completed response, the full resolved thinking selector, and no fallback, while its parent runs a different model. The child's own response and saved result must contain the requested nonce. Journals come only from that parent's artifact directory and must bind through `parentSession`. `scripts/omp-provenance.mjs` implements the evidence checks; `npm run test:omp-provenance` exercises them without credentials, including colon-containing model IDs. Configured routing, resolved records, assistant attempts, completed replies, and auxiliary `model_usage` stay distinct. The task `model` field belongs to seance and is not used.
+- **Isolation.** With `task.isolation.enabled`, `apply=false` and `merge=patch`, an `isolated: true` child must run in a different root, its relative write must appear in its `<id>.patch`, and the parent HEAD, tracked diff and untracked file contents (one SHA-256 fingerprint) must be unchanged. This shows relative-path routing only, not filesystem containment.
+- **Subagent lifecycle.** One child must report `started` and `completed` frames, produce its first reply, and have that result read before a direct `write agent://<id>` follow-up. Its journal must then contain a completed assistant reply after the delivered request, and a correlated `history://<id>` read must show that reply. The request echo alone is not proof. The smoke does not assert that `agent://<id>` stays frozen.
+- **Native async.** A finite async bash job must yield before settlement and be delivered on the follow-up wake.
 
 ## Reviewed upstream synchronization
 
@@ -101,4 +108,4 @@ version for each release because npm versions cannot be republished.
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pull requests and pushes with read-only permissions. It runs verify, verifier/updater/proposal/RPC unit tests, the real package test, bundled Bun tests, and strict typecheck. Model-backed smoke and the multi-host install suite stay separate.
+`.github/workflows/ci.yml` runs on pull requests and pushes with read-only permissions. It runs verify, verifier/updater/proposal/RPC/provenance unit tests, the real package test, bundled Bun tests, and strict typecheck. Model-backed smoke and the multi-host install suite stay separate.

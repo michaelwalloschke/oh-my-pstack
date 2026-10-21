@@ -13,10 +13,16 @@
 ### OMP behavior
 
 - Isolated OMP installation loads the complete packaged skill catalog from the candidate, including `pstack-pi`, `orchestrate-omp`, and `poteto-help`.
-- Setup writes project `.pstack/config.md` with supported `provider/model:level` selectors, preserves unrelated lines, and does not create `.pi/settings.json`.
+- Setup discovers OMP models and routing with native inventory commands, writes project `.omp/config.yml` per-agent overrides alongside `.pstack/config.md`, preserves unrelated settings, and does not create `.pi/settings.json` or change global configuration. Roles sharing an agent share its model choice.
 - Native workflow dispatch maps planner to `task` and researcher to `scout` when designer and librarian are disabled, consumes full `agent://` results, and yields finite native async jobs instead of polling in-turn.
 - Without a scheduler, lifecycle work records a manual checkpoint rather than inventing a portable `/loop`.
 - Authenticated smoke keeps the disposable workspace on failure so traces remain inspectable, and it does not treat a skipped run as passing.
+- Add `scripts/omp-provenance.mjs` and credential-free tests: child journals are bound to their parent by `parentSession`, invoked models come only from assistant messages, and A/B/A sequences, unknown or missing metadata, fallbacks, auxiliary `model_usage`, and malformed journals are distinguished or rejected. See `skills/pstack-pi/references/omp.md#child-model-provenance`.
+- The authenticated smoke now seeds a project `.omp/config.yml`, requires setup to add live-agent `task.agentModelOverrides` without disturbing unrelated keys, and proves the routed child model from its persisted journal against a parent on a different model. It no longer asserts per-item `model` fields; that field belongs to seance.
+- The smoke also covers native isolation with auto-apply disabled (separate root, relative write captured in a patch, parent unchanged) and subagent lifecycle with a direct follow-up read through `history://`. Both phases passed on OMP 18.12.5, together with routing from a `gpt-6-luna` parent to a `gpt-6.1-sol` child.
+- Host identity now comes from the active runtime rather than installed executables. The OMP binding documents `solutionSpace`, configured/resolved/invoked model evidence, workspace ownership, and current messaging, cancellation, and revival limits.
+- Session recovery guidance covers `--resume`, `--continue`, `--restore`, and `--session-dir`, with checkpoint and workspace checks before writes resume.
+- Follow-up smoke checks recognize inline IRC request boundaries in `history://` transcripts and require a later assistant reply. Echoed requests no longer count as replies.
 
 ### Upstream synchronization
 

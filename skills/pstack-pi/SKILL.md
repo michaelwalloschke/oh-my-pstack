@@ -5,7 +5,7 @@ description: "Pi and Oh My Pi runtime adapter for poteto-mode. Maps canonical ps
 
 # pstack on Pi and Oh My Pi
 
-Read the [portable runtime contract](references/runtime.md) before delegation, including its model selection and reasoning-budget rules.
+Read the [portable runtime contract](references/runtime.md) before delegation, and on OMP the [OMP binding](references/omp.md) too. Together they hold the rules for host identity, model routing, reasoning, model provenance, workspace roots, and the task lifecycle.
 
 `poteto-mode` is the sole router. It selects the playbook, canonical role, step order, and lifecycle protocol. This adapter translates those choices. It does not change a playbook gate. The live host's instructions, agent inventory, and tool schema remain authoritative.
 
@@ -26,7 +26,7 @@ Map a role's behavior to an available agent, not its label to an invented agent 
 | `owner` | `task` | Own one PR lifecycle; the role can outlive an individual session. |
 | `mechanical` | `sonic` | Fully specified low-judgment edits. |
 
-Use `security-reviewer` for an independent security lane when it is available. A later synthesizer does not replace that review.
+Use `security-reviewer` for an independent security lane when it is available. A later synthesizer does not replace that review. OMP routes models by agent name, so roles mapped to one agent share its model (see [Model routing](references/omp.md#model-routing)).
 
 Canonical roles and model aliases are not concrete agent names. For the general-purpose default, omit `agent` when the live schema requires omission. `poteto-agent` and `comment-sicko` are direct named compatibility seams only when the host exposes them; they are not the default canonical routing. Never invent a `role` field. When `designer` or `librarian` is unavailable, map `planner` to `task` with a technical-planning brief and `researcher` to an available read-only research facility, typically `scout`.
 
@@ -36,19 +36,20 @@ The imported warning about a planning subagent concerns a source-host mechanism 
 
 The root performs every child start. Children do not start children or ask the user directly. Put these restrictions in each brief.
 
-Children start without the parent conversation. Give each one its goal, canonical role and mapped agent, writable and forbidden paths, repository and base revision, frozen evidence pointers, acceptance criteria, verification responsibility, output paths, report format, and the active standing policy.
+Children start without the parent conversation. Give each one its goal, canonical role and mapped agent, writable and forbidden paths, repository and base revision, frozen evidence pointers, acceptance criteria, verification responsibility, output paths, report format, the active standing policy, and a `solutionSpace` that says how open the problem is (see [Reasoning controls](references/omp.md#reasoning-controls)).
 
-Use the actual tool schema. OMP versions may expose a flat task or a `tasks[]` batch. Pass only fields the current schema supports. When batch mode is exposed, put shared immutable context in `context` and each independent slice in a separate item with a unique name. Start independent participants together within the host's concurrency limit. Preserve required lane coverage across waves when the limit is smaller than the panel.
+Use the actual tool schema. Current OMP exposes a `tasks[]` batch with a required shared `context` unless `task.batch` is off, which leaves one flat item per call. Pass only fields the current schema supports, and never put a worker `model` in an item. When batch mode is exposed, put shared immutable context in `context` and each independent slice in a separate item with a unique name and its own `agent`. Start independent participants together within the host's concurrency limit. Preserve required lane coverage across waves when the limit is smaller than the panel.
 
-Separate writers through supported isolation or structurally disjoint paths. A writer that needs a dedicated worktree receives an explicit workspace path; use an isolation flag only when the host exposes it. Freeze candidates before review and reviewer reports before synthesis.
+Separate writers through `isolated: true` when the live schema lists it, or through write sets you can prove disjoint. A manual worktree does not bind a Task's working directory, so a path in the brief does not redirect a writer. Isolation separates roots and is not a sandbox. Capture the parent baseline and settle ownership as [Workspace roots](references/omp.md#workspace-roots) says. Freeze candidates before review and reviewer reports before synthesis.
 
 ## Results and follow-ups
 
 Record the returned agent and job identifiers. Consume asynchronous results when delivered; a preview or compact result may be truncated. Always read the full result and transcript through the resources the host actually exposes, typically `agent://<id>` and `history://<id>`. Never treat a compact preview as the child's full report.
+On OMP, an early `agent://<id>` read may show only running progress. After completion, read the published result before sending a next-phase follow-up; the earlier progress read does not consume the final report.
 
-Use the live messaging, cancellation, and wait facilities. Some versions expose a hub; others expose resource writes, process controls, or dedicated tools. Do not invent a `hub` operation. Keep working while independent work remains. For a finite native `bash`, `eval`, or `task` job started asynchronously, yield the turn so the host can deliver the result. Do not poll, sleep, or call wait merely to hold the turn until that job ends. Consume the native delivery on the follow-up wake. Wait only when blocked and the host has no delivery that will resume the session. Ignore duplicate terminal deliveries and reject stale generations.
+Use the live messaging, cancellation, and wait facilities. On OMP, `write agent://<id>` messages a child over its IRC transport, `write proc://<id>/kill` cancels, and `wait` blocks. Agent Hub is a TUI for people, not a model-facing tool, so do not invent a `hub` operation. Other hosts expose their own controls. Keep working while independent work remains. For a finite native `bash`, `eval`, or `task` job started asynchronously, yield the turn so the host can deliver the result. Do not poll, sleep, or call wait merely to hold the turn until that job ends. Consume the native delivery on the follow-up wake. Wait only when blocked, which includes owing a reply to a direct message you sent, and the host has no delivery that will resume the session. Ignore duplicate terminal deliveries and reject stale generations. [Task lifecycle](references/omp.md#task-lifecycle) says what each control does to a child.
 
-Use fresh sessions by default for new work, fix rounds, retries, and the next queue item. Supply the original brief, later directives, prior report, and branch as needed. Retain or resume a session only when the work needs costly live state it still owns, such as uncommitted changes, its checkout, a running server, simulator, or watcher. A completed native agent id cannot revive a session. A stop order to a running agent is not session reuse.
+Use fresh sessions by default for new work, fix rounds, retries, and the next queue item. Supply the original brief, later directives, prior report, and branch as needed. Retain or resume a session only when the work needs costly live state it still owns, such as uncommitted changes, its checkout, a running server, simulator, or watcher. On OMP a finished child stays idle and a message can revive it, so check `read proc://` and `history://<id>` before resuming or replacing one. A stop order to a running agent is not session reuse.
 
 A child report is evidence, not verification. The root inspects the artifact and runs the checks assigned to it. Report checks as unrun when they were deferred to the parent. Never steer a reviewer toward a preferred conclusion.
 
@@ -102,9 +103,9 @@ One writer owns each mutable output. A new commit, restack, resolution, or appli
 
 ## Model routing
 
-Agent and model selection are separate. OMP can route through agent definitions, configured roles, or agent overrides. When the current task schema exposes a per-item `model` field, use it for a verified configured panel or role choice. When it does not, use the host's supported routing configuration rather than adding an unsupported field. Do not edit user settings merely to compensate for a stale skill example.
+Agent and model selection are separate. On OMP the agent picks the model through `task.agentModelOverrides`, the agent definition, or `modelRoles`, and a task item never carries a worker `model`. Follow [Model routing](references/omp.md#model-routing) and [Reasoning controls](references/omp.md#reasoning-controls). Do not edit user settings merely to compensate for a stale skill example.
 
-Use only selectors and reasoning controls confirmed by the live inventory and tool schema. `inherit-parent` and `auto` mean to omit an explicit model choice when the host supports that behavior. Honor the host's explicit rejection and fallback policy; report an unavailable requested choice instead of silently substituting a guessed model. Never send a hidden `effort` field when `task.enableEffort` is false or the live schema omits it. Pass a per-item `model` only when that field is present, using a confirmed selector such as `provider/model:level` rather than a separate effort argument. Claim model independence only when returned resolved-model metadata demonstrates it.
+Use only selectors and reasoning controls confirmed by the live inventory and tool schema. `inherit-parent` and `auto` mean to omit an explicit model choice when the host supports that behavior. Honor the host's explicit rejection and fallback policy; report an unavailable requested choice instead of silently substituting a guessed model. Before dispatching a child whose model comes from a `.pstack/config.md` line, compare that line with the mapped agent's effective override and report any mismatch, as [Check before dispatch](references/omp.md#model-routing) says. Never send a hidden `effort` field when `task.enableEffort` is false or the live schema omits it. Read a child's model from its journal, as [Child model provenance](references/omp.md#child-model-provenance) describes, and claim model independence only when those journals demonstrate it.
 
 ## Writing
 

@@ -12,7 +12,7 @@ Investigate the motivation and intent behind code.
 
 Companion to the `how` skill. `how` answers what the code does and how it works. `why` answers what forces led to its shape.
 
-Use the `why investigators` and `why synthesizer` lines from `$PSTACK_CONFIG` when that variable is set, otherwise `.pstack/config.md`. Pass a per-item `model` only when the live task schema exposes that field and the value is in the live inventory. Leave the model unset for `auto` or `inherit-parent` when the host can pass the parent model to a child. If the host rejects a configured choice, honor its documented rejection and fallback policy and report the gap; do not guess a vendor family or substitute a default slug. A missing child facility is a capability gap: the root may investigate on the active model, but it must not claim independent investigator or synthesizer children ran.
+Use the `why investigators` and `why synthesizer` lines from `$PSTACK_CONFIG` when that variable is set, otherwise `.pstack/config.md`. Send each child through the host's model routing, as [Models and routing](../pstack-pi/references/runtime.md#models-and-routing) describes. Leave the model unset for `auto` or `inherit-parent` when the host can pass the parent model to a child. If the host rejects a configured choice, honor its documented rejection and fallback policy and report the gap; do not guess a vendor family or substitute a default slug. A missing child facility is a capability gap: the root may investigate on the active model, but it must not claim independent investigator or synthesizer children ran.
 
 ## Operating Posture
 

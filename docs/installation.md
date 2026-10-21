@@ -12,7 +12,26 @@ Confirm the enabled plugin with `omp plugin list --json`, then load skills with 
 
 For local development, link a checkout with `omp plugin link /absolute/path/to/oh-my-pstack`, or run `omp --plugin-dir /absolute/path/to/oh-my-pstack`.
 
-OMP already exposes native `task` agents and a per-item `model` field. Do not install `pi-subagents` or write `.pi/settings.json` for OMP.
+OMP already exposes native `task` agents and routes each child's model by agent name through `task.agentModelOverrides`. A task item has no worker `model` field. Do not install `pi-subagents` or write `.pi/settings.json` for OMP.
+
+### Configure OMP models
+
+Run `/skill:setup-pstack` in the project. Setup runs `omp models --json` and `omp config list --json`, shows one model choice per live agent, and writes two project files after you confirm.
+
+| File | What it holds |
+| --- | --- |
+| `.omp/config.yml` | `task.agentModelOverrides.<agent>`, one selector per OMP agent. OMP reads it before each spawn. |
+| `.pstack/config.md`, or `$PSTACK_CONFIG` | The pstack role and panel choices, a budget comment, and the same selectors. |
+
+Setup edits `.omp/config.yml` in place and keeps unrelated keys. It never writes the user's `config.yml` under `~/.omp/agent/` or `.pi/settings.json`.
+
+Keep these limits in mind:
+
+- Routing is per agent name. Roles that share an agent share its model, and a panel whose seats run through one agent runs one model.
+- The `model` field in the live task schema belongs to `seance` consults, not to ordinary children.
+- Saved routing is configuration, not proof of what ran. Read a child's persisted journal for its resolved and invoked models. A parent that runs with `--no-session` leaves no journal.
+- `isolated: true` appears only when `task.isolation.enabled` is true. The default is false. A manual worktree does not move a Task's working directory.
+- The [OMP binding](../skills/pstack-pi/references/omp.md) holds the routing, provenance, workspace, and lifecycle rules.
 
 ### Updating an installed OMP package
 
@@ -103,7 +122,7 @@ The coverage column lists cases in the install test suite. It does not report a 
 
 | Host | Install skills | Delegation and model configuration | `test:install` coverage |
 | --- | --- | --- | --- |
-| OMP | `omp install` or a local plugin link | Maps roles to capabilities exposed by OMP. | Yes |
+| OMP | `omp install` or a local plugin link | Routes child models by agent name in `.omp/config.yml` and maps roles to the live agents. | Yes |
 | Pi | `pi install` | Native Pi has no subagents. Optional `pi-subagents` adds child delegation and per-role model assignments. | Yes |
 | OpenCode | Copy skills into the project or user skill directory. | Uses native agents and model settings in `opencode.json` or `opencode.jsonc`. | Global and project |
 | Claude Code | Install from the Claude marketplace. | Maps roles to capabilities exposed by the active session. | Yes |

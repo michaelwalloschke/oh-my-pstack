@@ -26,8 +26,8 @@ Git installation is the supported path today. An npm package named `pstack-pi` i
 ## What you get
 
 - `/skill:poteto-mode` chooses a playbook and keeps the step order.
-- `/skill:setup-pstack` records host-supported models and reasoning in project `.pstack/config.md`.
-- Native OMP `task` delegation through `pstack-pi`, including per-child model selectors when the live schema exposes them.
+- `/skill:setup-pstack` reads the live OMP model inventory, saves per-agent model routing in the project's `.omp/config.yml`, and records role choices and reasoning in `.pstack/config.md`.
+- Native OMP `task` delegation through `pstack-pi`. OMP picks a child's model by agent name, not per task item.
 - The upstream pstack skills, playbooks, and principles, plus this fork's OMP adapters.
 
 Subagents and review panels spend extra tokens. Setup can select cheaper supported models, less reasoning, or fewer panel seats. A model list is not a delegation facility.
@@ -36,11 +36,19 @@ OMP has native task agents. Native Pi still needs `pi-subagents` for the same ki
 
 This package version is `0.15.13-omp.1`. That is a fork release on the Cursor `0.15.13` baseline at commit `77526ffa67f8dafc698d14b5356e6d4fc78c3127`, recorded in `upstream.lock.json`. Sync updates the source pin. It does not rewrite the fork version.
 
+## Limits on OMP
+
+- OMP picks a model per agent, not per task item. Roles that run through one agent share its model, so a panel whose seats use one agent runs one model.
+- Saved routing is configuration, not proof. A child's resolved and invoked models appear only in its persisted journal, which the [OMP binding](skills/pstack-pi/references/omp.md) shows how to read.
+- A manual worktree does not move a Task's working directory. `isolated: true` separates workspace roots when `task.isolation.enabled` is on, and it is not a sandbox.
+- Agent Hub (`Alt+A`) is a terminal UI for people. Agents use `wait`, `proc://`, `agent://`, and `history://`.
+
 ## Guides
 
 - [Install on other hosts](docs/installation.md)
 - [Maintain, verify, and release](docs/maintenance.md)
 - [Runtime contract](skills/pstack-pi/references/runtime.md)
+- [OMP binding](skills/pstack-pi/references/omp.md)
 - [Upstream reconciliation](docs/upstream-compatibility-design.md)
 - [Changes](CHANGES.md)
 

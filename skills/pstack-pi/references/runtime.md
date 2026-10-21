@@ -2,15 +2,34 @@
 
 This file is the host-neutral binding for the imported pstack skills. Read it before
 using any instruction that mentions a task runner, model, transcript, question tool,
-skill path, or long-running loop.
+skill path, or long-running loop. When the host is OMP, also read the
+[OMP binding](omp.md). It holds model routing, provenance, workspace roots, and the task
+lifecycle for that host.
 
-## Host selection
+## Host identity
 
-Use the capabilities exposed by the current agent host. Do not assume Cursor,
-Claude Code, Codex, OMP, a particular CLI, or a particular model vendor. When a
-capability is unavailable, preserve the workflow gate and use the nearest truthful
-local equivalent. Do not claim a child, review, transcript, or live check happened
-unless the host reported it.
+Use the capabilities exposed by the current agent host. Do not assume a particular
+host, CLI, or model vendor.
+
+Identify the host from the active runtime, not from programs installed on the machine.
+A CLI on `PATH` shows that a program exists, not which agent runs this session. These
+signals identify a host:
+
+- The host's own statement of its identity in the system prompt or session metadata.
+- The live tool schema. OMP exposes a `task` tool whose items take `task` and
+  `solutionSpace`, and its read tool resolves `skill://`, `agent://`, `history://`, and
+  `proc://`.
+- The way the user invoked the skill, such as `/skill:<name>` on Pi and OMP or
+  `$<name>` on Codex.
+
+Do not infer identity from undocumented environment variables. When no signal
+identifies the host, report it as unknown and rely only on capabilities that the live
+tools confirm. After the runtime identifies the host, that host's own CLI is a valid
+inventory source, for example `omp models --json` on OMP.
+
+When a capability is unavailable, preserve the workflow gate and use the nearest
+truthful local equivalent. Do not claim a child, review, transcript, or live check
+happened unless the host reported it.
 
 ## Canonical roles
 
@@ -29,29 +48,38 @@ unless the host reported it.
 
 Map these roles to the live host's agent or task names. OMP's recommended mapping is
 `scout`, `designer` when available, `reviewer`, `security-reviewer`, `librarian` when
-available, `task`, and `sonic`. Unavailable names map to a supported `task` or `scout`
-brief. Claude Code and Codex may expose different names. The live inventory wins.
+available, `task`, and `sonic`, and `skill://pstack-pi` holds the exact table.
+Unavailable names map to a supported `task` or `scout` brief. Claude Code and Codex may
+expose different names. The live inventory wins.
 
 Every child brief must stand alone. It must name its goal, role, writable scope,
-acceptance criteria, verification command, forbidden scope, and report format. A
-child does not spawn another child unless the host explicitly supports nested
-delegation and the active playbook requires it.
+acceptance criteria, verification command, forbidden scope, and report format. On OMP it
+also carries a `solutionSpace` (see [Reasoning controls](omp.md#reasoning-controls)). A
+child does not spawn another child unless the host explicitly supports nested delegation
+and the active playbook requires it.
 
-Use a fresh session by default for new work, a fix round, a retry, and the next
-queue item. Retain or resume a session only when the work needs costly live state
-it still owns, such as uncommitted changes, its checkout, a running server,
-simulator, or watcher. A completed native agent id cannot revive that session.
+Use a fresh session by default for new work, a fix round, a retry, and the next queue
+item. Retain or resume a session only when the work needs costly live state it still
+owns, such as uncommitted changes, its checkout, a running server, simulator, or
+watcher. Whether a finished child can resume depends on the host. On OMP, read
+[Task lifecycle](omp.md#task-lifecycle).
 
-## Models
+## Models and routing
 
-Model inventory is not model delegation. A host may list models that the current
-conversation can use without exposing any task or subagent facility that can send
-a child to one of those models. Native Pi has this boundary: `pi --list-models`
-and `/model` select the single active conversation model, while Pi does not
-include built-in subagents.
+A model inventory lists the models the current conversation can use. It does not show
+that a child can use them. Routing is the mechanism that sends one child to one model,
+and each host has its own. Native Pi shows the gap. `pi --list-models` and `/model`
+select the single active conversation model, and Pi has no built-in subagents.
 
-For native Pi, install the maintained `pi-subagents` package when per-role models
-or parallel children are required:
+| Host | How a child gets its model | Where the setting lives |
+| --- | --- | --- |
+| OMP | By agent name. `task.agentModelOverrides.<agent>` comes first, then the agent definition's `model`, then the session fallback. A task item never carries a worker model. See [Model routing](omp.md#model-routing). | The project's `.omp/config.yml`, or the user's `config.yml` under `~/.omp/agent/` |
+| Pi with `pi-subagents` | `subagents.agentOverrides.<agent>.model` | `.pi/settings.json` |
+| OpenCode | The agent's `model` setting | `opencode.json` or `opencode.jsonc` |
+| Another host | A per-item `model` field or another mechanism, only when the live tool schema or host documentation offers it for ordinary children | The host's own configuration |
+
+For native Pi, install the maintained `pi-subagents` package when per-role models or
+parallel children are required:
 
 ```bash
 pi install npm:pi-subagents
@@ -64,16 +92,21 @@ built-in agents map to pstack roles as follows: `scout` for `explorer` and
 `mechanical`, `reviewer` for `reviewer`, `oracle` for planning and synthesis, and
 `delegate` for an `owner`.
 
-Use concrete `provider/model-id` values only when the host exposes per-child model
-selection and the value was confirmed in the live inventory. When the current task
-schema exposes a per-item `model` field, use it for a verified configured panel or
-role choice. When it does not, use the host's supported routing configuration rather
-than adding an unsupported field. Use role aliases only when the host explicitly
-documents a role-to-model mapping. `inherit-parent` means the current conversation's
-model only when the host can pass it to a child. A missing role entry means the host
-default. A panel is a list of role or model choices, and its size controls fan-out.
-Honor the host's explicit rejection and fallback policy. Report an unavailable
-requested choice instead of silently substituting a guessed model.
+Use concrete `provider/model-id` values only when the live inventory lists them. Use
+role aliases only when the host documents a role-to-model mapping. `inherit-parent`
+means the current conversation's model only when the host can pass it to a child. A
+missing role entry means the host default. A panel is a list of role or model choices,
+and its size controls fan-out. Honor the host's explicit rejection and fallback policy.
+Report an unavailable requested choice instead of silently substituting a guessed model.
+A role's configured choice and the host's effective routing can disagree, for example
+after a hand edit or when a routing file is missing. Compare them before dispatch and
+report a mismatch. Do not ignore the configured line silently, and do not edit user or
+global settings to make them agree.
+
+OMP and `pi-subagents` route by agent name, so every role that runs through one agent
+runs on one model. A panel whose seats run through one agent has N participants on one
+model. Report it that way, give seats distinct agents when the user wants independent
+models, and claim independence only from the host's resolved-model evidence.
 
 When the host has models but no child delegation, do not write a role mapping that
 looks active. Report the capability gap and tell the user to switch Pi's single
@@ -104,9 +137,10 @@ support it. If the host encodes effort in model IDs, use only detected variants
 with a documented mapping. Never construct an ID by changing a suffix. Keep
 supported aliases, including `inherit-parent`, unchanged. If an explicit effort
 is unsupported or a panel's lengths differ, report the invalid configuration
-before spawning. Do not silently claim the requested budget was applied. On OMP
-with `task.enableEffort: false`, omit `effort` entirely and keep a supported
-thinking selector in the model field when that field exists.
+before spawning. Do not silently claim the requested budget was applied. Roles that
+share an agent share its reasoning level, so when they ask for different efforts, ask
+the user for one value instead of averaging or choosing silently. On OMP, the controls
+are in [Reasoning controls](omp.md#reasoning-controls).
 
 Hosts without reasoning controls retain their model choices. Setup must report
 that limitation and omit applied budget and reasoning entries. A model inventory
@@ -140,7 +174,10 @@ Transcript-dependent skills accept an explicit transcript directory or host hist
 resource. Prefer `$PSTACK_TRANSCRIPTS_DIR` when the host does not expose a history
 resource. Never scan another project or a global vendor transcript tree. If no
 transcript source is available, report the gap and continue only with evidence that
-does not require it.
+does not require it. On OMP, `history://<id>` is the history resource. A child's own
+journal is reachable only through the session that started it, using `PI_SESSION_FILE`
+and the child's agent id, as [Child model provenance](omp.md#child-model-provenance)
+describes.
 
 ## Long-running work and verification
 

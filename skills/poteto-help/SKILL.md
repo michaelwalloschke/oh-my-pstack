@@ -32,7 +32,7 @@ Check the state that changes the answer, and mention it only when it does:
 On OMP:
 
 1. Install with `omp install https://github.com/JonathanPitre/oh-my-pstack`, then start a fresh session.
-2. Run [`/skill:setup-pstack`](../setup-pstack/SKILL.md). It confirms supported models and reasoning, and saves project role choices without writing Pi settings or replacing unrelated configuration.
+2. Run [`/skill:setup-pstack`](../setup-pstack/SKILL.md). It confirms supported models and reasoning, saves project role choices, and on OMP saves per-agent model routing in the project's `.omp/config.yml`. It writes no Pi settings and no global OMP settings, and it replaces no unrelated configuration.
 3. Start a task with `/skill:poteto-mode`, a goal, and an observable pass/fail check.
 
 Use OMP's actual available-command catalog for command names and aliases (`get_available_commands` for RPC clients, not Pi's `get_commands`). The table and example prompts below use upstream shorthand; on OMP, use `/skill:<name>` unless the catalog confirms another alias. Load `skill://pstack-pi` and its runtime reference for the native execution contract. `pstack-pi` and `orchestrate-omp` are runtime adapters, not replacements for the `poteto-mode` workflow entry point.
@@ -43,7 +43,7 @@ Installing does not start a task or create delegation capabilities. Invoke the s
 
 If cost is the worry, explain that subagents and review panels spend extra tokens. Rerun setup for cheaper supported models, less reasoning, or fewer panel seats. A confirmed panel list starts one participant per entry, in its configured order. `auto` and `inherit-parent` are valid only when the runtime supports their documented meaning; verify resolved models rather than promising lower cost or chat-model inheritance.
 
-This fork supports OMP's native task delegation and per-child model routing through the loaded adapter. Other hosts need an actual delegation facility. A model list alone does not provide one. Cursor Custom Modes and `/loop` remain source-host features; do not promise them on OMP.
+This fork supports OMP's native task delegation and per-agent model routing through the loaded adapter. Roles that run through one OMP agent share its model. Other hosts need an actual delegation facility. A model list alone does not provide one. Cursor Custom Modes and `/loop` remain source-host features; do not promise them on OMP.
 
 ## Start a task with `/poteto-mode`
 
@@ -127,10 +127,10 @@ Principles are one-rule skills that `/poteto-mode` reads and cites in its replie
 |---|---|
 | The mode stopped applying after a few turns | Start each new OMP task with `/skill:poteto-mode` and reload its instructions when needed; Cursor users can use a Custom Mode. |
 | A question got treated as the next step of the last task | Say "new task", or say the turn doesn't need the mode. |
-| A new model choice had no effect | Re-read the selected project configuration and inspect the next child's resolved model; restart only if the host requires a catalog or settings reload. |
+| A new model choice had no effect | Re-read the selected project configuration. OMP re-reads routing before each spawn, so only a child spawned afterward changes. Read that child's journal for its resolved model, and restart only if the host requires a catalog or settings reload. |
 | Runs cost more than expected | See the cost paragraph under Get set up. |
 | A skill did not load | Verify its installed file and actual host command, then invoke or read it explicitly; installation and model discovery do not execute a workflow. |
-| Parallel agents overwrote each other | Give each agent its own worktree, or run them as cloud agents, which each get their own machine. |
+| Parallel agents overwrote each other | Give each writer its own workspace root. On OMP that means `isolated: true` when the schema lists it, because a manual worktree does not move a Task's working directory. Otherwise keep write sets disjoint, or run the writers in turn. On cloud hosts each agent gets its own machine. |
 | An overnight run moved but finished nothing | Use a real completion predicate and an exposed scheduler; without one, record a manual checkpoint and exact next command instead of promising unattended hourly continuation. |
 | The reply claims success from a green build | Ask for the real command, flow, stored value, or profile. That's the prove-it-works principle. |
 

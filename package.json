@@ -62,6 +62,7 @@
     "test:proposal": "node --test scripts/sync-proposal.test.mjs",
     "test:package": "node --test scripts/package.test.mjs",
     "test:omp-rpc": "node --test scripts/omp-rpc.test.mjs",
+    "test:omp-provenance": "node --test scripts/omp-provenance.test.mjs",
     "smoke:omp": "node scripts/omp-smoke.mjs",
     "test:install": "node --test --test-concurrency=1 scripts/install.test.mjs",
     "sync:check": "node scripts/sync-upstream.mjs --check",

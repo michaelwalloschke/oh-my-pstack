@@ -25,7 +25,7 @@ jobs:
       - name: Verify package
         run: npm run verify
       - name: Run credential-free unit tests
-        run: node --test scripts/verify.test.mjs scripts/sync-upstream.test.mjs scripts/sync-proposal.test.mjs scripts/omp-rpc.test.mjs scripts/package.test.mjs
+        run: node --test scripts/verify.test.mjs scripts/sync-upstream.test.mjs scripts/sync-proposal.test.mjs scripts/omp-rpc.test.mjs scripts/omp-provenance.test.mjs scripts/package.test.mjs
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - name: Test bundled scripts
