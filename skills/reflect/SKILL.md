@@ -30,7 +30,7 @@ For each candidate, read the first JSONL line and check that `message.content[0]
 
 ### 2. Spawn three reviewers in parallel
 
-The root launches three reviewer children concurrently through the host's task facility. Use the configured choices when present; otherwise map the canonical roles below through the live host inventory. Pass a per-item `model` only when the live task schema exposes that field and the value is in the live inventory. Leave the model unset for `auto` or `inherit-parent` when the host can pass the parent model to a child. If the host rejects a configured choice, honor its documented rejection and fallback policy and report the gap; do not guess a vendor family or substitute a default slug.
+The root launches three reviewer children concurrently through the host's task facility. Use the configured choices when present; otherwise map the canonical roles below through the live host inventory. Send each lane through the host's model routing, as [Models and routing](../pstack-pi/references/runtime.md#models-and-routing) describes. Lanes that run through one agent share its model. Leave the model unset for `auto` or `inherit-parent` when the host can pass the parent model to a child. If the host rejects a configured choice, honor its documented rejection and fallback policy and report the gap; do not guess a vendor family or substitute a default slug.
 
 Grant each child read access to the transcript and any host tools needed for context lookups, but forbid file writes in the brief. If the host cannot combine read-only repository posture with external-tool access, preserve tool access and enforce no writes in the brief; the parent applies edits. A missing child facility is a capability gap, not a completed reflect.
 

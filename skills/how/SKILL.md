@@ -10,7 +10,7 @@ Follow the [portable runtime contract](../pstack-pi/references/runtime.md) for e
 
 Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
 
-Use the `how explorer` and `how explainer` lines from `$PSTACK_CONFIG` when that variable is set, otherwise `.pstack/config.md`. Pass a per-item `model` only when the live task schema exposes that field and the value is in the live inventory. Leave the model unset for `auto` or `inherit-parent` when the host can pass the parent model to a child. If the host rejects a configured choice, honor its documented rejection and fallback policy and report the gap; do not guess a vendor family or substitute a default slug. A missing child facility is a capability gap: the root may explore on the active model, but it must not claim independent explorer or explainer children ran.
+Use the `how explorer` and `how explainer` lines from `$PSTACK_CONFIG` when that variable is set, otherwise `.pstack/config.md`. Send each child through the host's model routing, as [Models and routing](../pstack-pi/references/runtime.md#models-and-routing) describes. Leave the model unset for `auto` or `inherit-parent` when the host can pass the parent model to a child. If the host rejects a configured choice, honor its documented rejection and fallback policy and report the gap; do not guess a vendor family or substitute a default slug. A missing child facility is a capability gap: the root may explore on the active model, but it must not claim independent explorer or explainer children ran.
 
 ## Step 1. Assess Complexity
 
