@@ -12,6 +12,7 @@
 - Make the worktree lock probe portable to macOS `awk` and hold worktrees when lock inspection fails or returns no status instead of labeling them safe.
 - Keep `unlimited` reasoning budgets as preservation of current supported levels rather than rewriting explicit thinking selectors to max.
 - Align installation commands, public-source overrides, marketplace identifiers, and package metadata with this fork instead of the upstream distribution.
+- Pass the resolved forge when initializing orchestration frontiers. Restore the five shortened principle workflows and protect those fork adaptations during upstream sync.
 
 ## 0.15.13-omp.1 — unreleased
 

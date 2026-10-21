@@ -234,6 +234,9 @@ This fork imports the source refresh, conflict-review artifacts, and portable sa
 - The OMP binding retains workspace ownership, cancellation, revival, and session recovery guidance.
 - The worktree audit reports lock status separately from lock reasons and holds a worktree when lock inspection fails. This fixes the inherited macOS `awk` failure and prevents a lock reason of `-` from appearing unlocked.
 - The existing `unlimited` budget keeps current supported reasoning levels. The upstream change to target max is not imported because it would rewrite explicit thinking selectors.
+- Frontier initialization passes the resolved forge explicitly rather than silently defaulting Origin repositories to GitHub.
+- The five shortened principle skills retain their core workflows: encode recurring lessons, compare competing designs, migrate callers before deleting APIs, simplify refactors, and model typed states. Their fork adaptations are protected during upstream sync. The ten changed principle skills that remain unprotected were checked for the same loss and retain their actionable contracts.
+- Internal API cutovers deliberately follow the [refactoring playbook](../skills/poteto-mode/playbooks/refactoring.md#refactoring): no compatibility shims or parallel old-and-new paths, rather than the older time-boxed-adapter allowance.
 
 ### Reconciled fork verification
 
@@ -246,7 +249,8 @@ These checks ran against the reconciled `sync/upstream-0.15.29` tree, rather tha
 - The authenticated eight-scenario OMP smoke passed with a `gpt-6-luna` parent routing a child to `gpt-6.1-sol:low`. It proved project routing for all five role-target agents, preserved an unrelated agent override, captured an isolated patch without parent changes, and observed a completed assistant reply after an IRC follow-up.
 - The actual macOS worktree audit held a clean, locked worktree whose lock reason was `-`, with no `awk` errors. Before the fix, the upstream script labeled a locked worktree safe after its lock probe failed.
 - The public source override and marketplace identifiers now select this fork. The installation receipts above use the isolated candidate; they do not claim public `main` already includes this PR.
+- The principle/forge follow-up passed all three existing frontier tests and loaded each of the five restored skills through native `omp read` in an isolated HOME linked to the candidate, with exit 0 and no stderr.
 
-The authenticated smoke receipt is from `31c0ea6`, before the review follow-up. The public-source and lock-probe fixes were followed by fresh Node and isolated-install runs. The follow-up's model-guidance change restores the existing cap for `large`, `medium`, and `small`. It leaves `unlimited` and the smoke's explicit low selector unchanged.
+The authenticated smoke receipt is from `31c0ea6`, before the review follow-ups. The public-source and lock-probe fixes were followed by fresh Node and isolated-install runs. The budget-guidance clarification restores the existing cap for `large`, `medium`, and `small`. It leaves `unlimited` and the smoke's explicit low selector unchanged.
 
 This verification does not claim a passing OpenCode installation. Its older discovery command remains incompatible with OpenCode v2.1.2, as noted in [Installation](installation.md#opencode).
